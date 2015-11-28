@@ -230,82 +230,86 @@ void GYRO_Common() {
 // ACC common part
 // ****************
 void ACC_Common() {
-  static int32_t a[3];
-  if (calibratingA>0) {
-    calibratingA--;
-    for (uint8_t axis = 0; axis < 3; axis++) {
-      if (calibratingA == 511) a[axis]=0;   // Reset a[axis] at start of calibration
-      a[axis] +=imu.accADC[axis];           // Sum up 512 readings
-      global_conf.accZero[axis] = a[axis]>>9; // Calculate average, only the last itteration where (calibratingA == 0) is relevant
-    }
-    if (calibratingA == 0) {
-      global_conf.accZero[YAW] -= ACC_1G;   // shift Z down by ACC_1G and store values in EEPROM at end of calibration
-      conf.angleTrim[ROLL]   = 0;
-      conf.angleTrim[PITCH]  = 0;
-      writeGlobalSet(1); // write accZero in EEPROM
-    }
-  }
-  #if defined(INFLIGHT_ACC_CALIBRATION)
-      static int32_t b[3];
-      static int16_t accZero_saved[3]  = {0,0,0};
-      static int16_t  angleTrim_saved[2] = {0, 0};
-      //Saving old zeropoints before measurement
-      if (InflightcalibratingA==50) {
-         accZero_saved[ROLL]  = global_conf.accZero[ROLL] ;
-         accZero_saved[PITCH] = global_conf.accZero[PITCH];
-         accZero_saved[YAW]   = global_conf.accZero[YAW] ;
-         angleTrim_saved[ROLL]  = conf.angleTrim[ROLL] ;
-         angleTrim_saved[PITCH] = conf.angleTrim[PITCH] ;
-      }
-      if (InflightcalibratingA>0) {
-        for (uint8_t axis = 0; axis < 3; axis++) {
-          // Reset a[axis] at start of calibration
-          if (InflightcalibratingA == 50) b[axis]=0;
-          // Sum up 50 readings
-          b[axis] +=imu.accADC[axis];
-          // Clear global variables for next reading
-          imu.accADC[axis]=0;
-          global_conf.accZero[axis]=0;
-        }
-        //all values are measured
-        if (InflightcalibratingA == 1) {
-          AccInflightCalibrationActive = 0;
-          AccInflightCalibrationMeasurementDone = 1;
-          SET_ALARM_BUZZER(ALRM_FAC_CONFIRM, ALRM_LVL_CONFIRM_1);     //buzzer for indicatiing the end of calibration
-          // recover saved values to maintain current flight behavior until new values are transferred
-          global_conf.accZero[ROLL]  = accZero_saved[ROLL] ;
-          global_conf.accZero[PITCH] = accZero_saved[PITCH];
-          global_conf.accZero[YAW]   = accZero_saved[YAW] ;
-          conf.angleTrim[ROLL]  = angleTrim_saved[ROLL] ;
-          conf.angleTrim[PITCH] = angleTrim_saved[PITCH] ;
-        }
-        InflightcalibratingA--;
-      }
-      // Calculate average, shift Z down by ACC_1G and store values in EEPROM at end of calibration
-      if (AccInflightCalibrationSavetoEEProm == 1){  //the copter is landed, disarmed and the combo has been done again
-        AccInflightCalibrationSavetoEEProm = 0;
-        global_conf.accZero[ROLL]  = b[ROLL]/50;
-        global_conf.accZero[PITCH] = b[PITCH]/50;
-        global_conf.accZero[YAW]   = b[YAW]/50-ACC_1G;
-        conf.angleTrim[ROLL]   = 0;
-        conf.angleTrim[PITCH]  = 0;
-        writeGlobalSet(1); // write accZero in EEPROM
-      }
-  #endif
-  imu.accADC[ROLL]  -=  global_conf.accZero[ROLL] ;
-  imu.accADC[PITCH] -=  global_conf.accZero[PITCH];
-  imu.accADC[YAW]   -=  global_conf.accZero[YAW] ;
+	static int32_t a[3];
+	if (calibratingA > 0) {
+		calibratingA--;
+		for (uint8_t axis = 0; axis < 3; axis++) {
+			if (calibratingA == 511) a[axis] = 0;   // Reset a[axis] at start of calibration
+			a[axis] += imu.accADC[axis];           // Sum up 512 readings
+			global_conf.accZero[axis] = a[axis] >> 9; // Calculate average, only the last itteration where (calibratingA == 0) is relevant
+		}
+		if (calibratingA == 0) {
+			global_conf.accZero[YAW] -= ACC_1G;   // shift Z down by ACC_1G and store values in EEPROM at end of calibration
+			conf.angleTrim[ROLL] = 0;
+			conf.angleTrim[PITCH] = 0;
+			writeGlobalSet(1); // write accZero in EEPROM
+		}
+	}
 
-  #if defined(SENSORS_TILT_45DEG_LEFT)
-    int16_t temp = ((imu.accADC[PITCH] - imu.accADC[ROLL] )*7)/10;
-    imu.accADC[ROLL] = ((imu.accADC[ROLL]  + imu.accADC[PITCH])*7)/10;
-    imu.accADC[PITCH] = temp;
-  #endif
-  #if defined(SENSORS_TILT_45DEG_RIGHT)
-    int16_t temp = ((imu.accADC[PITCH] + imu.accADC[ROLL] )*7)/10;
-    imu.accADC[ROLL] = ((imu.accADC[ROLL]  - imu.accADC[PITCH])*7)/10;
-    imu.accADC[PITCH] = temp;
-  #endif
+#if defined(INFLIGHT_ACC_CALIBRATION)
+	static int32_t b[3];
+	static int16_t accZero_saved[3] = { 0, 0, 0 };
+	static int16_t  angleTrim_saved[2] = { 0, 0 };
+	//Saving old zeropoints before measurement
+	if (InflightcalibratingA == 50) {
+		accZero_saved[ROLL] = global_conf.accZero[ROLL];
+		accZero_saved[PITCH] = global_conf.accZero[PITCH];
+		accZero_saved[YAW] = global_conf.accZero[YAW];
+		angleTrim_saved[ROLL] = conf.angleTrim[ROLL];
+		angleTrim_saved[PITCH] = conf.angleTrim[PITCH];
+	}
+	if (InflightcalibratingA > 0) {
+		for (uint8_t axis = 0; axis < 3; axis++) {
+			// Reset a[axis] at start of calibration
+			if (InflightcalibratingA == 50) b[axis] = 0;
+			// Sum up 50 readings
+			b[axis] += imu.accADC[axis];
+			// Clear global variables for next reading
+			imu.accADC[axis] = 0;
+			global_conf.accZero[axis] = 0;
+		}
+
+		//all values are measured
+		if (InflightcalibratingA == 1) {
+			AccInflightCalibrationActive = 0;
+			AccInflightCalibrationMeasurementDone = 1;
+			SET_ALARM_BUZZER(ALRM_FAC_CONFIRM, ALRM_LVL_CONFIRM_1);     //buzzer for indicatiing the end of calibration
+			// recover saved values to maintain current flight behavior until new values are transferred
+			global_conf.accZero[ROLL] = accZero_saved[ROLL];
+			global_conf.accZero[PITCH] = accZero_saved[PITCH];
+			global_conf.accZero[YAW] = accZero_saved[YAW];
+			conf.angleTrim[ROLL] = angleTrim_saved[ROLL];
+			conf.angleTrim[PITCH] = angleTrim_saved[PITCH];
+		}
+		InflightcalibratingA--;
+	}
+
+	// Calculate average, shift Z down by ACC_1G and store values in EEPROM at end of calibration
+	if (AccInflightCalibrationSavetoEEProm == 1){  //the copter is landed, disarmed and the combo has been done again
+		AccInflightCalibrationSavetoEEProm = 0;
+		global_conf.accZero[ROLL] = b[ROLL] / 50;
+		global_conf.accZero[PITCH] = b[PITCH] / 50;
+		global_conf.accZero[YAW] = b[YAW] / 50 - ACC_1G;
+		conf.angleTrim[ROLL] = 0;
+		conf.angleTrim[PITCH] = 0;
+		writeGlobalSet(1); // write accZero in EEPROM
+	}
+#endif
+
+	imu.accADC[ROLL] -= global_conf.accZero[ROLL];
+	imu.accADC[PITCH] -= global_conf.accZero[PITCH];
+	imu.accADC[YAW] -= global_conf.accZero[YAW];
+
+#if defined(SENSORS_TILT_45DEG_LEFT)
+	int16_t temp = ((imu.accADC[PITCH] - imu.accADC[ROLL] )*7)/10;
+	imu.accADC[ROLL] = ((imu.accADC[ROLL]  + imu.accADC[PITCH])*7)/10;
+	imu.accADC[PITCH] = temp;
+#endif
+#if defined(SENSORS_TILT_45DEG_RIGHT)
+	int16_t temp = ((imu.accADC[PITCH] + imu.accADC[ROLL] )*7)/10;
+	imu.accADC[ROLL] = ((imu.accADC[ROLL]  - imu.accADC[PITCH])*7)/10;
+	imu.accADC[PITCH] = temp;
+#endif
 }
 
 // ************************************************************************************************************
@@ -980,7 +984,7 @@ void Mag_init() {
   delay(100);
 }
 
-#if !defined(MPU6050_I2C_AUX_MASTER)
+#if !defined(MPU6050_I2C_AUX_MASTER || MPU9250)
   void Device_Mag_getADC() {
     i2c_getSixRawADC(MAG_ADDRESS,MAG_DATA_REGISTER);
     MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,          
@@ -1304,6 +1308,95 @@ void Gyro_getADC () {
 // ************************************************************************************************************
 
 
+
+// ************************************************************************************************************
+// I2C Gyroscope/Accelerometer/Compass MPU9250
+// ************************************************************************************************************
+#if defined(MPU9250)
+
+#if !defined(MPU9250_ADDRESS)
+  #define MPU9250_ADDRESS     0x68 // address pin AD0 low (GND), default for FreeIMU v0.4 and InvenSense evaluation board
+  //#define MPU9250_ADDRESS     0x69 // address pin AD0 high (VCC)
+  //The MAG acquisition
+  #define MAG_ADDRESS 0x0C
+  #define MAG_DATA_REGISTER 0x03
+#endif
+
+
+////////////////////////////////////
+//           Gyro start           //
+////////////////////////////////////
+
+void Gyro_init() {
+  TWBR = ((F_CPU / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
+  i2c_writeReg(MPU9250_ADDRESS, 0x6B, 0x80);             //PWR_MGMT_1    -- DEVICE_RESET 1
+  delay(5);
+  i2c_writeReg(MPU9250_ADDRESS, 0x6B, 0x03);             //PWR_MGMT_1    -- SLEEP 0; CYCLE 0; TEMP_DIS 0; CLKSEL 3 (PLL with Z Gyro reference)
+  i2c_writeReg(MPU9250_ADDRESS, 0x1A, GYRO_DLPF_CFG); //CONFIG        -- EXT_SYNC_SET 0 (disable input pin for data sync) ; default DLPF_CFG = 0 => ACC bandwidth = 260Hz  GYRO bandwidth = 256Hz)
+  i2c_writeReg(MPU9250_ADDRESS, 0x1B, 0x18);             //GYRO_CONFIG   -- FS_SEL = 3: Full scale set to 2000 deg/sec
+  // enable I2C bypass for AUX I2C, allways on because we have a magnetometer on board
+  i2c_writeReg(MPU9250_ADDRESS, 0x37, 0x02);           //INT_PIN_CFG   -- INT_LEVEL=0 ; INT_OPEN=0 ; LATCH_INT_EN=0 ; INT_RD_CLEAR=0 ; FSYNC_INT_LEVEL=0 ; FSYNC_INT_EN=0 ; I2C_BYPASS_EN=1 ; CLKOUT_EN=0
+}
+
+void Gyro_getADC () {
+  i2c_getSixRawADC(MPU9250_ADDRESS, 0x43);
+  GYRO_ORIENTATION( ((rawADC[0]<<8) | rawADC[1])/4 , // range: +/- 8192; +/- 2000 deg/sec
+             ((rawADC[2]<<8) | rawADC[3])/4 ,
+             ((rawADC[4]<<8) | rawADC[5])/4 );
+  GYRO_Common();
+}
+
+////////////////////////////////////
+//            Gyro end            //
+////////////////////////////////////
+
+
+////////////////////////////////////
+//           ACC start            //
+////////////////////////////////////
+void ACC_init () {
+  i2c_writeReg(MPU9250_ADDRESS, 0x1C, 0x10);             
+}
+
+void ACC_getADC () {
+  i2c_getSixRawADC(MPU9250_ADDRESS, 0x3B);
+  ACC_ORIENTATION( ((rawADC[0]<<8) | rawADC[1])/8 ,
+                   ((rawADC[2]<<8) | rawADC[3])/8 ,
+                   ((rawADC[4]<<8) | rawADC[5])/8 );
+  ACC_Common();
+}
+
+////////////////////////////////////
+//            ACC end             //
+////////////////////////////////////
+  
+
+////////////////////////////////////
+//            MAG start           //
+////////////////////////////////////
+void Mag_init() {
+    delay(100);
+    i2c_writeReg(MAG_ADDRESS,0x0a,0x01);  //Start the first conversion
+    delay(100);
+}
+    void Device_Mag_getADC() {
+     i2c_getSixRawADC(MAG_ADDRESS, 0x03);               
+ MAG_ORIENTATION( ((rawADC[1]<<8) | rawADC[0]) ,          
+                     ((rawADC[3]<<8) | rawADC[2]) ,     
+                     ((rawADC[5]<<8) | rawADC[4]) ); 
+ //Start another meassurement
+    i2c_writeReg(MAG_ADDRESS,0x0a,0x01);
+}
+////////////////////////////////////
+//            MAG end             //
+////////////////////////////////////
+
+#endif
+// ************************************************************************************************************
+// End Of I2C Gyroscope/Accelerometer/Compass MPU9250
+// ************************************************************************************************************
+
+
 #if defined(WMP)
 // ************************************************************************************************************
 // I2C Wii Motion Plus
@@ -1355,7 +1448,6 @@ void Gyro_getADC() {
 // first contribution from guru_florida (02-25-2012)
 //
 #if defined(SRF02) || defined(SRF08) || defined(SRF10) || defined(SRC235)
-
 // the default address for any new sensor found on the bus
 // the code will move new sonars to the next available sonar address in range of F0-FE so that another
 // sonar sensor can be added again.
@@ -1511,10 +1603,49 @@ void Sonar_update() {
   sonarAlt = srf08_ctx.range[0]; // only one sensor considered for the moment
 }
 #else
-inline void Sonar_init() {}
-void Sonar_update() {}
-#endif
+#if defined(SONAR_GENERIC_ECHOPULSE)
+// ************************************************************************************************************
+// Sonar HC-SR04 support
+// ************************************************************************************************************
+volatile unsigned long SONAR_GEP_startTime = 0;
+volatile unsigned long SONAR_GEP_echoTime = 0;
+volatile static int32_t  tempSonarAlt = 0;
 
+void Sonar_init() {
+	SONAR_GEP_EchoPin_PCICR;
+	SONAR_GEP_EchoPin_PCMSK;
+	SONAR_GEP_EchoPin_PINMODE_IN;
+	SONAR_GEP_TriggerPin_PINMODE_OUT;
+}
+
+uint8_t Sonar_update() {
+	sonarAlt = 1 + tempSonarAlt;
+	SONAR_GEP_TriggerPin_PIN_LOW;
+	delayMicroseconds(2);
+	SONAR_GEP_TriggerPin_PIN_HIGH;
+	delayMicroseconds(10);
+	SONAR_GEP_TriggerPin_PIN_LOW;
+
+	return sonarAlt;
+}
+
+ISR(SONAR_GEP_EchoPin_PCINT_vect) {
+	if (SONAR_GEP_EchoPin_PIN & (1 << SONAR_GEP_EchoPin_PCINT)) {
+		SONAR_GEP_startTime = micros();
+	}
+	else {
+		SONAR_GEP_echoTime = micros() - SONAR_GEP_startTime;
+		if (SONAR_GEP_echoTime <= SONAR_GENERIC_MAX_RANGE*SONAR_GENERIC_SCALE)
+			tempSonarAlt = SONAR_GEP_echoTime / SONAR_GENERIC_SCALE;
+		else
+			tempSonarAlt = -1;
+	}
+}
+#else
+void Sonar_init() {}
+uint8_t Sonar_update() {}
+#endif
+#endif
 
 void initS() {
   i2c_init();

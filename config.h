@@ -127,7 +127,7 @@
       //#define CRIUS_LITE      			// Crius MultiWii Lite
       //#define CRIUS_SE					// Crius MultiWii SE
       //#define CRIUS_SE_v2_0   			// Crius MultiWii SE 2.0 with MPU6050, HMC5883 and BMP085
-      #define RCTIMER_CRIUS_SE_v2_0		// Crius MultiWii SE 2.0 with MPU6050, HMC5883 and MS561101BA
+      //#define RCTIMER_CRIUS_SE_v2_0		// Crius MultiWii SE 2.0 with MPU6050, HMC5883 and MS561101BA
       //#define OPENLRSv2MULTI  			// OpenLRS v2 Multi Rc Receiver board including ITG3205 and ADXL345
       //#define BOARD_PROTO_1   			// with MPU6050 + HMC5883L + MS baro
       //#define BOARD_PROTO_2   			// with MPU6050 + slave  MAG3110 + MS baro
@@ -172,6 +172,7 @@
       //#define ITG3200
       //#define MPU3050
       //#define L3G4200D
+      #define MPU9250       //combo + ACC + magnetometer
       //#define MPU6050       //combo + ACC
       //#define LSM330        //combo + ACC
       
@@ -186,7 +187,7 @@
       //#define MMA8451Q
 
       /* I2C barometer */
-      //#define BMP085
+      #define BMP085
       //#define MS561101BA
 
       /* I2C magnetometer */
@@ -210,7 +211,7 @@
       //#define FORCE_MAG_ORIENTATION(X, Y, Z)  {imu.magADC[ROLL]  =  X; imu.magADC[PITCH]  =  Y; imu.magADC[YAW]  = Z;}
 
       /* Board orientation shift */
-      /* If you have frame designed only for + mode and you cannot rotate FC phisycally for flying in X mode (or vice versa)
+      /* If you have frame designed only for + mode and you cannot rotate FC physically for flying in X mode (or vice versa)
        * you can use one of of this options for virtual sensors rotation by 45 deegres, then set type of multicopter according to flight mode.
        * Check motors order and directions of motors rotation for matching with new front point!  Uncomment only one option! */
       //#define SENSORS_TILT_45DEG_RIGHT        // rotate the FRONT 45 degres clockwise
@@ -365,7 +366,7 @@ At this moment you can use this function only with WinGUI 2.3 release. MultiWiiC
       /* The following lines apply only for specific receiver with only one PPM sum signal, on digital PIN 2
          Select the right line depending on your radio brand. Feel free to modify the order in your PPM order is different */
       //#define SERIAL_SUM_PPM         PITCH,YAW,THROTTLE,ROLL,AUX1,AUX2,AUX3,AUX4,8,9,10,11 //For Graupner/Spektrum
-      //#define SERIAL_SUM_PPM         ROLL,PITCH,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4,8,9,10,11 //For Robe/Hitec/Futaba
+      #define SERIAL_SUM_PPM         ROLL,PITCH,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4,8,9,10,11 //For Robe/Hitec/Futaba
       //#define SERIAL_SUM_PPM         ROLL,PITCH,YAW,THROTTLE,AUX1,AUX2,AUX3,AUX4,8,9,10,11 //For Multiplex
       //#define SERIAL_SUM_PPM         PITCH,ROLL,THROTTLE,YAW,AUX1,AUX2,AUX3,AUX4,8,9,10,11 //For some Hitec/Sanwa/Others
 
